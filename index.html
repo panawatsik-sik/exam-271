@@ -235,7 +235,7 @@
       <div class="ready-big">
         <div class="icon">&#128221;</div>
         <div class="t">พร้อมเริ่มทำข้อสอบ</div>
-        <div class="s">เมื่อกดเริ่ม ระบบจะเปิดเต็มจอและเริ่มจับเวลา</div>
+        <div class="s">เมื่อกดเริ่ม ระบบจะเริ่มจับเวลาทันที</div>
       </div>
       <button class="btn" onclick="beginExam()">เริ่มทำข้อสอบ · Start exam</button>
       <button class="btn ghost" onclick="backToSearch()">แก้ไขข้อมูล · Back</button>
@@ -243,7 +243,7 @@
     <div class="card">
       <h2>กติกาการสอบ <span class="en">Rules</span></h2>
       <ul class="rules">
-        <li>ข้อสอบจะเปิดแบบเต็มจอ กรุณาทำในหน้านี้จนเสร็จ</li>
+        <li>กรุณาทำข้อสอบในหน้านี้จนเสร็จ ห้ามออกไปหน้าอื่น</li>
         <li>ห้ามย่อจอ สลับแอป หรือเปิดหน้าต่างอื่น ระบบจะบันทึกทุกครั้ง</li>
         <li>ข้อสอบปรนัย 60 ข้อ 4 ตัวเลือก เลือกคำตอบที่ถูกที่สุดเพียงข้อเดียว</li>
       </ul>
@@ -1038,20 +1038,6 @@ function goReady(){
 }
 function backToSearch(){ show("screenStart"); window.scrollTo(0,0); }
 
-/* ---------- fullscreen ---------- */
-function enterFullscreen(){
-  try{
-    const el = document.documentElement;
-    const fn = el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
-    if(fn){
-      const p = fn.call(el);
-      // บางเบราว์เซอร์คืน Promise ที่ reject แบบ async — จับไว้ไม่ให้หลุด
-      if(p && typeof p.catch === "function"){ p.catch(function(){}); }
-    }
-  }catch(e){ /* เปิดเต็มจอไม่ได้ก็ไม่เป็นไร สอบต่อได้ */ }
-}
-function isFullscreen(){ return !!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement); }
-
 /* ---------- เริ่มสอบ ---------- */
 function beginExam(){
   // กันเข้าซ้ำในเครื่องเดียวกัน (เช็คเร็ว ๆ) — กันซ้ำข้ามเครื่องจริงทำตอน submit ที่ฐานข้อมูล
@@ -1065,7 +1051,6 @@ function beginExam(){
   $("whoName").textContent = state.name + " (" + state.sid + ")";
   show("screenExam");
   window.scrollTo(0,0);
-  enterFullscreen();   // ขอเต็มจอหลังเข้าหน้าข้อสอบแล้ว — ถ้าเปิดไม่ได้ก็ยังสอบต่อได้
 }
 function buildExam(){
   const box = $("questions"); box.innerHTML="";
@@ -1110,13 +1095,9 @@ function updateFlagChip(){
 }
 function resumeExam(){
   $("overlay").classList.remove("show");
-  if(state.examActive&&!state.submitted) enterFullscreen();
 }
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden") raiseFlag(); });
 window.addEventListener("blur",()=>{ setTimeout(()=>{ if(document.hidden) return; raiseFlag(); },50); });
-document.addEventListener("fullscreenchange",onFsChange);
-document.addEventListener("webkitfullscreenchange",onFsChange);
-function onFsChange(){ if(state.examActive&&!state.submitted&&!isFullscreen()) raiseFlag(); }
 
 /* ---------- ส่งคำตอบ ---------- */
 function submitExam(){
@@ -1153,7 +1134,6 @@ function submitExam(){
   $("rFlags").textContent=state.flags+" ครั้ง";
   $("rTime").textContent=mm+" นาที "+ss+" วินาที";
   if(state.flags>0) $("honestyNote").style.display="block";
-  if(document.exitFullscreen&&isFullscreen()){ try{ document.exitFullscreen(); }catch(e){} }
   show("screenResult");
   window.scrollTo(0,0);
 
