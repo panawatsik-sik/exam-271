@@ -955,6 +955,11 @@ async function saveResult(rec){
   }catch(e){ return "fail"; }
 }
 
+// จำรหัสที่ส่งข้อสอบแล้วในเครื่องนี้ (กันกดส่งซ้ำจากเครื่องเดิม)
+const USED_KEY = "exam271_used_ids";
+function getUsed(){ try{ return JSON.parse(localStorage.getItem(USED_KEY)||"[]"); }catch(e){ return []; } }
+function markUsed(id){ try{ const u=getUsed(); if(!u.includes(id)){ u.push(id); localStorage.setItem(USED_KEY, JSON.stringify(u)); } }catch(e){} }
+
 /* ---------- ค้นหา ---------- */
 function setMode(m){
   searchMode = m;
