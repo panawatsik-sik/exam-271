@@ -1040,9 +1040,15 @@ function backToSearch(){ show("screenStart"); window.scrollTo(0,0); }
 
 /* ---------- fullscreen ---------- */
 function enterFullscreen(){
-  const el = document.documentElement;
-  const fn = el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
-  if(fn){ try{ fn.call(el); }catch(e){} }
+  try{
+    const el = document.documentElement;
+    const fn = el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
+    if(fn){
+      const p = fn.call(el);
+      // บางเบราว์เซอร์คืน Promise ที่ reject แบบ async — จับไว้ไม่ให้หลุด
+      if(p && typeof p.catch === "function"){ p.catch(function(){}); }
+    }
+  }catch(e){ /* เปิดเต็มจอไม่ได้ก็ไม่เป็นไร สอบต่อได้ */ }
 }
 function isFullscreen(){ return !!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement); }
 
@@ -1055,11 +1061,11 @@ function beginExam(){
     return;
   }
   state.startTime=Date.now(); state.examActive=true;
-  enterFullscreen();
   buildExam();
   $("whoName").textContent = state.name + " (" + state.sid + ")";
   show("screenExam");
   window.scrollTo(0,0);
+  enterFullscreen();   // ขอเต็มจอหลังเข้าหน้าข้อสอบแล้ว — ถ้าเปิดไม่ได้ก็ยังสอบต่อได้
 }
 function buildExam(){
   const box = $("questions"); box.innerHTML="";
