@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ระบบสอบออนไลน์ 02036271 | Online Exam</title>
+<style>
+  :root {
+    --ink: #1a2e22; --paper: #f6f4ec; --card: #ffffff;
+    --leaf: #2f7d4f; --leaf-dark: #235d3b; --leaf-soft: #e5f0e8;
+    --clay: #c65d3b; --amber: #d99a2b; --line: #d8d4c4; --muted: #6b7566;
+    --shadow: 0 2px 8px rgba(30,50,35,.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Noto Sans Thai","Sarabun",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background: var(--paper); color: var(--ink); line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 90px; }
+  .screen { display: none; }
+  .screen.active { display: block; animation: fade .25s ease; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .band {
+    background: linear-gradient(160deg,var(--leaf) 0%,var(--leaf-dark) 100%); color: #fff;
+    border-radius: 16px; padding: 26px 22px; margin-bottom: 20px; box-shadow: var(--shadow);
+  }
+  .band h1 { font-size: 21px; font-weight: 700; }
+  .band p { font-size: 13.5px; opacity: .9; margin-top: 6px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow);
+  }
+  .card h2 { font-size: 17px; margin-bottom: 4px; }
+  .card .sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; margin-top: 14px; }
+  label:first-of-type { margin-top: 0; }
+  input[type=text], select {
+    width: 100%; font-size: 16px; padding: 12px 14px; border: 1.5px solid var(--line);
+    border-radius: 10px; background: #fbfaf5; color: var(--ink); font-family: inherit;
+    transition: border-color .15s;
+  }
+  input[type=text]:focus, select:focus { outline: none; border-color: var(--leaf); }
+  select { appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b7566' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 34px; }
+
+  .search-wrap { padding: 14px; background: var(--leaf-soft); border-radius: 12px; margin-bottom: 18px; }
+  .search-wrap .stitle { font-size: 13px; font-weight: 700; color: var(--leaf-dark); margin-bottom: 8px; }
+  .toggle { display: flex; gap: 8px; margin-bottom: 10px; }
+  .toggle button {
+    flex: 1; font-family: inherit; font-size: 13.5px; font-weight: 700; padding: 9px;
+    border-radius: 9px; border: 1.5px solid var(--line); background: var(--card);
+    color: var(--muted); cursor: pointer; transition: all .15s;
+  }
+  .toggle button.on { background: var(--leaf); color: #fff; border-color: var(--leaf); }
+  .search-box { position: relative; }
+  .results {
+    position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 30;
+    background: var(--card); border: 1.5px solid var(--line); border-radius: 10px;
+    max-height: 240px; overflow-y: auto; box-shadow: var(--shadow); display: none;
+  }
+  .results.show { display: block; }
+  .results .item { padding: 11px 14px; cursor: pointer; border-bottom: 1px solid var(--paper); font-size: 15px; }
+  .results .item:last-child { border-bottom: none; }
+  .results .item:hover, .results .item.active { background: var(--leaf-soft); }
+  .results .item .rid { font-size: 12px; color: var(--muted); }
+  .results .empty { padding: 14px; text-align: center; color: var(--muted); font-size: 14px; }
+  .search-hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  .filled-tag { font-size: 12px; font-weight: 700; color: var(--leaf-dark); background: var(--leaf-soft);
+    padding: 6px 12px; border-radius: 8px; margin-bottom: 14px; display: none; }
+  .filled-tag.show { display: block; }
+
+  .err { color: var(--clay); font-size: 13px; font-weight: 600; margin: 10px 0 0; min-height: 18px; }
+  .btn {
+    display: block; width: 100%; text-align: center; font-family: inherit; font-size: 16px;
+    font-weight: 700; padding: 14px; border-radius: 12px; border: none; cursor: pointer;
+    background: var(--leaf); color: #fff; transition: background .15s, transform .05s; margin-top: 16px;
+  }
+  .btn:active { transform: scale(.99); }
+  .btn:hover { background: var(--leaf-dark); }
+  .btn.ghost { background: transparent; color: var(--leaf); border: 1.5px solid var(--leaf); }
+  .btn.ghost:hover { background: var(--leaf-soft); }
+
+  .rules { list-style: none; font-size: 14px; }
+  .rules li { padding: 8px 0 8px 28px; position: relative; border-bottom: 1px dashed var(--line); }
+  .rules li:last-child { border-bottom: none; }
+  .rules li::before { content: "•"; position: absolute; left: 8px; top: 8px; color: var(--leaf); font-weight: 700; }
+  .warn-note {
+    background: #fdf3e7; border: 1px solid #f0d9b5; border-radius: 10px;
+    padding: 12px 14px; font-size: 13px; color: #8a5a1a; margin-top: 14px;
+  }
+  .ready-big { text-align: center; padding: 10px 0 4px; }
+  .ready-big .icon { font-size: 44px; margin-bottom: 6px; }
+  .ready-big .t { font-size: 20px; font-weight: 800; color: var(--leaf-dark); }
+  .ready-big .s { font-size: 14px; color: var(--muted); margin-top: 4px; }
+  .confirm-card { border: 1.5px solid var(--leaf); background: var(--leaf-soft); }
+  .confirm-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: 15px; gap: 12px; }
+  .confirm-row:last-child { border-bottom: none; }
+  .confirm-row .lbl { color: var(--muted); font-size: 14px; white-space: nowrap; }
+  .confirm-row .v { font-weight: 700; text-align: right; }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 20; background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; display: flex;
+    align-items: center; justify-content: space-between; box-shadow: var(--shadow);
+  }
+  .topbar .who { font-size: 13px; color: var(--muted); }
+  .topbar .who strong { color: var(--ink); display: block; font-size: 14px; }
+  .progress-num { font-size: 14px; font-weight: 700; color: var(--leaf-dark); }
+  .flag-count { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; background: var(--leaf-soft); color: var(--leaf-dark); margin-top: 3px; display: inline-block; }
+  .flag-count.hot { background: #f8e0d8; color: var(--clay); }
+  .bar { height: 6px; background: var(--line); border-radius: 6px; overflow: hidden; margin-bottom: 20px; }
+  .bar > div { height: 100%; background: var(--leaf); width: 0; transition: width .3s; }
+  .q { margin-bottom: 22px; scroll-margin-top: 80px; }
+  .q .qnum { font-size: 13px; font-weight: 700; color: var(--leaf); margin-bottom: 6px; }
+  .q .qtext { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
+  .choice {
+    display: flex; align-items: flex-start; gap: 12px; padding: 13px 15px;
+    border: 1.5px solid var(--line); border-radius: 11px; margin-bottom: 10px; cursor: pointer;
+    background: var(--card); transition: border-color .12s, background .12s;
+  }
+  .choice:hover { border-color: var(--leaf); }
+  .choice.sel { border-color: var(--leaf); background: var(--leaf-soft); }
+  .choice .key {
+    flex: 0 0 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--line);
+    display: grid; place-items: center; font-size: 13px; font-weight: 700; color: var(--muted);
+  }
+  .choice.sel .key { background: var(--leaf); color: #fff; border-color: var(--leaf); }
+  .choice .val { flex: 1; font-size: 15px; padding-top: 1px; }
+  .overlay {
+    position: fixed; inset: 0; z-index: 100; display: none; background: rgba(20,35,25,.92);
+    color: #fff; align-items: center; justify-content: center; padding: 24px; text-align: center;
+  }
+  .overlay.show { display: flex; }
+  .overlay .box { max-width: 400px; }
+  .overlay .icon { font-size: 46px; margin-bottom: 12px; }
+  .overlay h3 { font-size: 20px; margin-bottom: 10px; }
+  .overlay p { font-size: 15px; opacity: .9; margin-bottom: 20px; }
+  .overlay .cnt { font-size: 15px; font-weight: 700; color: var(--amber); }
+  .result-score { text-align: center; padding: 16px 0; }
+  .result-score .done-icon { font-size: 48px; margin-bottom: 8px; }
+  .result-score .big-msg { font-size: 22px; font-weight: 800; color: var(--leaf-dark); }
+  .stat-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed var(--line); font-size: 14px; gap: 12px; }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row .lbl { color: var(--muted); white-space: nowrap; }
+  .stat-row .v { font-weight: 700; text-align: right; }
+  .en { color: var(--muted); font-size: .88em; font-weight: 400; }
+  .footer-hint { text-align: center; font-size: 12px; color: var(--muted); margin-top: 24px; }
+  .submit-wrap { position: sticky; bottom: 0; padding: 12px 0 0; background: linear-gradient(to top, var(--paper) 60%, transparent); }
+  .save-ok { background: var(--leaf-soft); color: var(--leaf-dark); }
+  .save-fail { background: #f8e0d8; color: var(--clay); }
+
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay">
+  <div class="box">
+    <div class="icon">&#9888;&#65039;</div>
+    <h3>ตรวจพบการออกจากหน้าจอสอบ</h3>
+    <p>คุณออกจากหน้าจอข้อสอบ<br>กรุณากลับเข้าสู่หน้าสอบและอยู่ในหน้านี้จนกว่าจะส่งคำตอบ</p>
+    <p class="cnt" id="overlayCount"></p>
+    <button class="btn" onclick="resumeExam()">กลับเข้าสู่การสอบ · Resume</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ===== Screen 1: กรอก/ค้นหาข้อมูล ===== -->
+  <section class="screen active" id="screenStart">
+    <div class="band">
+      <h1>วิทยาศาสตร์และเทคโนโลยีด้านพืชสวน</h1>
+      <p>02036271 · ภาคต้น ปีการศึกษา 2569 · ข้อสอบชุดที่ 1</p>
+    </div>
+    <div class="card">
+      <h2>ลงชื่อเข้าสอบ <span class="en">Check in</span></h2>
+      <p class="sub">ค้นหาชื่อหรือรหัสของคุณเพื่อเติมข้อมูลอัตโนมัติ หรือกรอกเองทุกช่อง</p>
+
+      <div class="search-wrap">
+        <div class="stitle">ค้นหาข้อมูลของฉัน</div>
+        <div class="toggle">
+          <button id="tgId" class="on" onclick="setMode('id')">ค้นด้วยรหัสนิสิต</button>
+          <button id="tgName" onclick="setMode('name')">ค้นด้วยชื่อ-นามสกุล</button>
+        </div>
+        <div class="search-box">
+          <input type="text" id="searchInput" autocomplete="off" placeholder="พิมพ์รหัสนิสิต...">
+          <div class="results" id="results"></div>
+        </div>
+        <div class="search-hint">ถ้าค้นไม่พบ ให้กรอกข้อมูลในช่องด้านล่างเอง</div>
+      </div>
+
+      <div class="filled-tag" id="filledTag">&#10003; เติมข้อมูลจากรายชื่อแล้ว ตรวจสอบความถูกต้องได้</div>
+
+      <label for="fSid">รหัสนิสิต <span class="en">Student ID</span></label>
+      <input type="text" id="fSid" inputmode="numeric" autocomplete="off" placeholder="เช่น 6920101190">
+
+      <label for="fName">ชื่อ-นามสกุล <span class="en">Full name</span></label>
+      <input type="text" id="fName" autocomplete="off" placeholder="เช่น นางสาวกนกพิชญ์ มีสุข">
+
+      <label for="fYear">ชั้นปี <span class="en">Year</span></label>
+      <select id="fYear">
+        <option value="">— เลือกชั้นปี —</option>
+        <option value="1">ปี 1</option>
+        <option value="2">ปี 2</option>
+        <option value="3">ปี 3</option>
+        <option value="4">ปี 4</option>
+        <option value="5">ปี 5</option>
+        <option value="6">ปี 6 ขึ้นไป</option>
+      </select>
+
+      <label for="fFaculty">คณะ <span class="en">Faculty</span></label>
+      <input type="text" id="fFaculty" autocomplete="off" placeholder="เช่น เกษตร กำแพงแสน">
+
+      <label for="fMajor">สาขาวิชา <span class="en">Major</span></label>
+      <input type="text" id="fMajor" autocomplete="off" placeholder="เช่น พืชสวน">
+
+      <div class="err" id="startErr"></div>
+      <button class="btn" onclick="goReady()">ถัดไป · Next</button>
+    </div>
+  </section>
+
+  <!-- ===== Screen 2: ยืนยัน + พร้อมเริ่มสอบ ===== -->
+  <section class="screen" id="screenReady">
+    <div class="band"><h1>ตรวจสอบข้อมูลก่อนเริ่มสอบ</h1><p>Confirm your details</p></div>
+    <div class="card confirm-card">
+      <div class="confirm-row"><span class="lbl">รหัสนิสิต</span><span class="v" id="cSid">—</span></div>
+      <div class="confirm-row"><span class="lbl">ชื่อ-นามสกุล</span><span class="v" id="cName">—</span></div>
+      <div class="confirm-row"><span class="lbl">ชั้นปี</span><span class="v" id="cYear">—</span></div>
+      <div class="confirm-row"><span class="lbl">คณะ</span><span class="v" id="cFaculty">—</span></div>
+      <div class="confirm-row"><span class="lbl">สาขาวิชา</span><span class="v" id="cMajor">—</span></div>
+    </div>
+    <div class="card">
+      <div class="ready-big">
+        <div class="icon">&#128221;</div>
+        <div class="t">พร้อมเริ่มทำข้อสอบ</div>
+        <div class="s">เมื่อกดเริ่ม ระบบจะเปิดเต็มจอและเริ่มจับเวลา</div>
+      </div>
+      <button class="btn" onclick="beginExam()">เริ่มทำข้อสอบ · Start exam</button>
+      <button class="btn ghost" onclick="backToSearch()">แก้ไขข้อมูล · Back</button>
+    </div>
+    <div class="card">
+      <h2>กติกาการสอบ <span class="en">Rules</span></h2>
+      <ul class="rules">
+        <li>ข้อสอบจะเปิดแบบเต็มจอ กรุณาทำในหน้านี้จนเสร็จ</li>
+        <li>ห้ามย่อจอ สลับแอป หรือเปิดหน้าต่างอื่น ระบบจะบันทึกทุกครั้ง</li>
+        <li>ข้อสอบปรนัย 60 ข้อ 4 ตัวเลือก เลือกคำตอบที่ถูกที่สุดเพียงข้อเดียว</li>
+      </ul>
+      <div class="warn-note">ระบบบันทึกจำนวนครั้งที่ออกจากหน้าจอ เพื่อรายงานให้อาจารย์ผู้คุมสอบทราบ</div>
+    </div>
+  </section>
+
+  <!-- ===== Screen 3: ข้อสอบ ===== -->
+  <section class="screen" id="screenExam">
+    <div class="topbar">
+      <div class="who">กำลังสอบ<strong id="whoName">—</strong></div>
+      <div style="text-align:right">
+        <div class="progress-num"><span id="answered">0</span>/<span id="total">0</span> ข้อ</div>
+        <div class="flag-count" id="flagChip">ออกจากจอ 0 ครั้ง</div>
+      </div>
+    </div>
+    <div class="bar"><div id="barFill"></div></div>
+    <div id="questions"></div>
+    <div class="submit-wrap">
+      <button class="btn" id="submitBtn" onclick="submitExam()">ส่งคำตอบ · Submit</button>
+    </div>
+    <p class="footer-hint">ตรวจทานให้ครบทุกข้อก่อนส่ง เมื่อส่งแล้วจะแก้ไม่ได้</p>
+  </section>
+
+  <!-- ===== Screen 4: ผล ===== -->
+  <section class="screen" id="screenResult">
+    <div class="band"><h1>ส่งคำตอบเรียบร้อย</h1><p>บันทึกคำตอบของคุณแล้ว</p></div>
+    <div class="card">
+      <div class="result-score">
+        <div class="done-icon">&#9989;</div>
+        <div class="big-msg">ส่งข้อสอบเรียบร้อยแล้ว</div>
+        <div id="scoreWrap" style="display:none; margin-top:14px;">
+          <div style="font-size:52px; font-weight:800; color:var(--leaf-dark); line-height:1;"><span id="scoreNum">0</span><span style="font-size:22px; color:var(--muted);"> / <span id="scoreTotal">60</span></span></div>
+          <div id="scorePct" style="font-size:17px; font-weight:700; margin-top:6px;">0%</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>สรุปการสอบ <span class="en">Summary</span></h2>
+      <div class="stat-row"><span class="lbl">รหัสนิสิต</span><span class="v" id="rSid">—</span></div>
+      <div class="stat-row"><span class="lbl">ชื่อ</span><span class="v" id="rName">—</span></div>
+      <div class="stat-row"><span class="lbl">ชั้นปี / คณะ</span><span class="v" id="rYearFac">—</span></div>
+      <div class="stat-row" id="rScoreRow" style="display:none;"><span class="lbl">คะแนน</span><span class="v" id="rScore">—</span></div>
+      <div class="stat-row"><span class="lbl">จำนวนข้อที่ตอบ</span><span class="v" id="rAns">—</span></div>
+      <div class="stat-row"><span class="lbl">จำนวนครั้งที่ออกจากหน้าจอ</span><span class="v" id="rFlags">—</span></div>
+      <div class="stat-row"><span class="lbl">เวลาที่ใช้</span><span class="v" id="rTime">—</span></div>
+    </div>
+    <div class="warn-note" id="honestyNote" style="display:none">ระบบบันทึกว่ามีการออกจากหน้าจอระหว่างสอบ ข้อมูลนี้จะแสดงต่ออาจารย์ผู้คุมสอบ</div>
+    <div id="saveStatus" style="display:none; text-align:center; font-size:14px; font-weight:700; padding:12px; border-radius:10px; margin-top:8px;"></div>
+    <p class="footer-hint">กรุณาแสดงหน้าจอนี้ต่ออาจารย์ผู้คุมสอบ</p>
+  </section>
+
+
+
+</div>
+
+<script>
+"use strict";
+
+const QUESTIONS = [
+  {
+    "q": "Totipotency มีความสำคัญอย่างไรกับการเพาะเลี้ยงเนื้อเยื่อ",
+    "choices": [
+      "เป็นแหล่งธาตุอาหารสำคัญต่อการเจริญเติบโตของพืช",
+      "เป็นคุณสมบัติของเซลล์พืชที่สามารถพัฒนาเป็นยา",
+      "เป็นคุณสมบัติของเซลล์พืชที่สามารถพัฒนาเป็นต้นใหม่ได้",
+      "เป็นคุณสมบัติของเซลล์พืชที่มีความทนทานต่อเชื้อโรค"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "ข้อใดไม่ใช่ประโยชน์ของการเพาะเลี้ยงเนื้อเยื่อโดยตรง",
+    "choices": [
+      "เก็บรักษาพันธุ์พืชที่หายาก",
+      "ผลิตสารทุติภูมิสำหรับทำยารักษาโรค",
+      "ผลิตเครื่องนุ่มห่มจากเส้นใยของพืช",
+      "ช่วยในการผลิตพืชปลอดโรค"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "ถ้าท่านต้องการขยายพันธุ์มะพร้าวกะทิด้วยการเพาะเลี้ยงเนื้อเยื่อควรใช้ส่วนใดมาเพาะเลี้ยงจึงจะเหมาะสมที่สุด",
+    "choices": [
+      "เอมบริโอ",
+      "ปลายราก",
+      "เอนโดสเปิร์ม",
+      "ยอดมะพร้าว"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "ชิ้นส่วนที่นิยมมากที่สุดในการใช้สำหรับปั่นตากล้วยไม้เพื่อขยายพันธุ์คือส่วนใด",
+    "choices": [
+      "หน่ออ่อน",
+      "ใบอ่อน",
+      "ปลายราก",
+      "เมล็ด"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "ข้อใดไม่ถูกต้องเกี่ยวกับการเตรียมตัวก่อนทำการเพาะเลี้ยงเนื้อเยื่อในห้องปฏิบัติการเพาะเลี้ยงเนื้อเยื่อ",
+    "choices": [
+      "ฉีดพ่นมือด้วยแอลกอฮอล์ 70% ก่อนการทำงาน",
+      "ทำการล้างรากต้นไม้ให้สะอาดป้องกันโรคทางดิน",
+      "ฉีดพ่นตู้ย้ายเนื้อเยื่อพืชด้วยแอลกอฮอล์ 70%",
+      "ถอดเครื่องประดับข้อมือเก็บและล้างมือให้สะอาด"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "สารใดไม่เหมาะสำหรับการฟอกฆ่าเชื้อใบอ่อนของดอกหน้าวัว",
+    "choices": [
+      "คลอรอกซ์",
+      "น้ำสบู่",
+      "โซเดียมไฮโปคลอไรด์",
+      "ด่างทับทิม"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "การเพาะเลี้ยงเนื้อเยื่อจากส่วนใดของพืชที่มีโอกาสเกิดการกลายพันธุ์ได้สูงที่สุด",
+    "choices": [
+      "เอมบริโอ",
+      "เกสรตัวผู้",
+      "แคลลัส",
+      "ยอดอ่อน"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "การฟอกฆ่าเชื้อเนื้อเยื่อส่วนไหนที่ต้องใช้ความเข้มข้นคลอรอกซ์สูงกว่าและฟอกนานกว่า",
+    "choices": [
+      "ฝักกล้วยไม้",
+      "หน่อกล้วย",
+      "หน่อไม้ฝรั่ง",
+      "ยอดมันสำปะหลัง"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "ข้อใดไม่ใช่ประโยชน์ของผงถ่านสำหรับการเพาะเลี้ยงเนื้อเยื่อพืช",
+    "choices": [
+      "ส่งเสริมการเกิดยอด",
+      "ดูดซับสารพิษ",
+      "กระตุ้นการสร้างราก",
+      "ทำให้ pH ของอาหารคงที่"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "สารอินทรีย์จากธรรมชาติที่ไม่นิยมใส่ในอาหารเพาะเลี้ยงเนื้อเยื่อคืออะไร",
+    "choices": [
+      "มันฝรั่ง",
+      "กล้วย",
+      "น้ำมะพร้าวอ่อน",
+      "กะทิ"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "การปรับ pH ในสูตรอาหารเพื่อให้เป็นกรดอ่อน ๆ ที่ 5.5-5.8 เพื่ออะไร",
+    "choices": [
+      "เพื่อให้อาหารแข็งตัวได้เร็วขึ้น",
+      "เพื่อให้เชื้อโรคเจริญเติบโตไม่ได้",
+      "เพื่อให้ฮอร์โมนพืชมีประสิทธิภาพ",
+      "เพื่อป้องกันการตกตะกอนของธาตุอาหาร"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "เนื้อเยื่อเจริญบริเวณปลายยอด ปลายรากของพืชเรียกว่าอะไร",
+    "choices": [
+      "meri-clone tissue",
+      "cortex tissue",
+      "cork cambium tissue",
+      "meristematic tissue"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "ในการฟอกฆ่าเชื้อเนื้อเยื่อถ้าไม่มีโซเดียมไฮโปคลอไรด์ สามารถใช้สารชนิดใดแทนได้",
+    "choices": [
+      "ผงฟู",
+      "ผงซักฟอก",
+      "ไฮเตอร์",
+      "น้ำส้มสายชู"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "ข้อใดไม่ใช่พืชที่นิยมขยายพันธุ์ด้วยการเพาะเลี้ยงเนื้อเยื่อในเชิงการค้าอย่างแพร่หลายของไทย",
+    "choices": [
+      "กล้วย",
+      "หน้าวัว",
+      "กล้วยไม้",
+      "มะเขือเทศ"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "ข้อใดกล่าวไม่ถูกต้องเกี่ยวกับการเพาะเลี้ยงเนื้อเยื่อด้วยระบบจมชั่วคราว (Temporary immersion system; TIS)",
+    "choices": [
+      "เนื้อเยื่อพืชได้รับอาหารเพาะเลี้ยงตลอดเวลาจึงโตเร็ว",
+      "ประหยัดแรงงานคน",
+      "ประหยัดพื้นที่",
+      "สามารถย่นระยะเวลาในการผลิตได้"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "ทำไมการมาเข้าเรียนจึงเป็นประโยชน์กว่าการไม่เข้าเรียน",
+    "choices": [
+      "เพราะเป็นการเรียนลัดจากประสบการณ์ของอาจารย์ที่รู้เห็นมากกว่า ประหยัดเงินและเวลา ไม่ต้องไปดูเองหลายที่หลายประเทศ",
+      "บางภาพในไฟล์ประกอบการบรรยาย มีประเด็นน่าสนใจ ที่อาจารย์ชี้ชวนให้สังเกต ซึ่งเราอาจได้ไอเดียไปต่อยอดได้",
+      "การฟังผู้เชี่ยวชาญวิเคราะห์สถานการณ์ ได้ประโยชน์มากกว่าอ่านเองที่บางครั้งเรายังไม่รู้รอบทุกด้าน",
+      "ถูกทุกข้อ"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "ไม้ตัดดอกอะไร ที่ประเทศไทยผลิตเพื่อส่งออกมากที่สุดในโลก",
+    "choices": [
+      "Orchid",
+      "Curcuma",
+      "Heliconia",
+      "Marigold"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "ข้อใดคือ \"Ornamental Plants\"",
+    "choices": [
+      "อ.นกชอบเอาต้นหอม สะระแหน่ ใส่แจกันรวมกับดอกไม้ไว้ริมหน้าต่างข้างครัว",
+      "อ.นก ปลูกพริกปล่อยให้เม็ดแดงไปทั้งต้นเพื่อประดับใต้ต้นคริสต์มาสฉลองเทศกาล",
+      "เพื่อนชอบแต่ของกิน เลยคิดว่าจะเอาเงาะ มังคุด มะม่วงเสียบไม้ แล้วทำช่อดอกไม้ให้ซะเลย",
+      "ถูกทุกข้อ"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "\"Siam Tulip\" คืออะไร",
+    "choices": [
+      "บริษัทนำเข้าหัวพันธุ์ทิวลิปจากต่างประเทศ ซึ่งตั้งอยู่ที่จังหวัดราชบุรี",
+      "ปทุมมา ดอกไม้จากเมืองไทย ที่เบ่งบานสวยงามคล้ายทิวลิปในช่วงฤดูร้อนที่ยุโรป",
+      "หัวพันธุ์ทิวลิปที่ได้รับการตั้งชื่อให้เป็นเกียรติแก่ประเทศไทย",
+      "ชื่อพันธุ์ทิวลิป ที่เคยเข้ามาสู่แผ่นดินไทยตั้งแต่สมัยสมเด็จพระนารายณ์"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "ข้อใดถูกต้องเกี่ยวกับการส่งออกไม้ดอกไม้ประดับของไทย เพื่อนำเงินตราเข้าประเทศ",
+    "choices": [
+      "มีการส่งออกไม้ใบกระถางทางเรือครั้งละจำนวนมาก",
+      "มีการส่งออกหัวพันธุ์ว่านสี่ทิศฮอลแลนด์เพื่อไปขายที่เนเธอร์แลนด์",
+      "มีการส่งออกต้นกล้ากล้วยไม้เล็กๆ ในขวดเพาะเลี้ยงเนื้อเยื่อไปขายต่างประเทศ",
+      "ถูกทุกข้อ"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "อายุการปักแจกัน หรืออายุการใช้งานของไม้ตัดดอก เรียกเป็นภาษาอังกฤษว่า",
+    "choices": [
+      "Day life",
+      "Vase life",
+      "Shelf life",
+      "Floral life"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "ทำไมต้องรู้รูปแบบที่มีการซื้อขายหรือใช้งานกันโดยทั่วไปของไม้ดอกไม้ประดับ",
+    "choices": [
+      "เพื่อประกอบการตัดสินใจว่ากระแสความนิยมไปทางไหน เราจะได้วางแผนผลิตได้ตรงตามความต้องการของตลาด",
+      "เพื่อให้ได้ไอเดียไปต่อยอดพัฒนารูปแบบต้นไม้ของเราเองที่แตกต่างจากที่มีขายทั่วไป",
+      "เพื่อประเมินว่าเราจะเลือกใช้เทคโนโลยีการผลิตแบบใดให้เหมาะสมกับรูปแบบที่ต้องการ",
+      "ถูกทุกข้อ"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "ข้อใดคืออาชีพที่เกี่ยวข้องกับไม้ใบประดับ",
+    "choices": [
+      "ปลูกมอนสเตอร่าตัดใบขาย",
+      "ส่งออกไม้ใบกระถางไปต่างประเทศทางเรือ",
+      "ขับรถขนส่งต้นไม้มาขาย",
+      "ถูกทุกข้อ"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "ข้อใดไม่ถูกต้องเกี่ยวกับตลาดประมูลดอกไม้",
+    "choices": [
+      "ภาษาอังกฤษเรียกว่า Flower Auction",
+      "มีเทคโนโลยีการประมูลดิจิตอลที่ทันสมัยเพื่อให้ดอกไม้ถึงมือลูกค้าเร็วที่สุด เพื่อรักษาคุณภาพ",
+      "เป็นระบบที่ใช้กันทั่วไปกับสินค้าเกษตรทุกชนิดทั่วโลกอยู่แล้วในยุคดิจิตอล",
+      "สินค้าดอกไม้ราคาสูง คุ้มค่ากับการลงทุนเทคโนโลยีกับระบบตลาดประมูลที่ทันสมัย"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "\"FloraHolland\" คือ อะไร",
+    "choices": [
+      "สวนทิวลิปขนาดใหญ่ สวยงาม และมีชื่อเสียงที่สุดในโลก ตั้งอยู่ที่ประเทศเนเธอร์แลนด์",
+      "ตลาดประมูลไม้ดอกไม้ประดับที่ทันสมัย และมีชื่อเสียงที่สุดในโลกที่ประเทศเนเธอร์แลนด์",
+      "เทศกาลท่องเที่ยวของเนเธอร์แลนด์ ช่วงดอกทิวลิปบาน ที่มีทุ่งทิวลิปหลากสี และกังหันลม",
+      "แบรนด์ของดอกไม้ที่ผลิตโดยชาวดัชท์ ประเทศเนเธอร์แลนด์ ซึ่งสวยงามและได้รับการยอมรับทั่วโลก"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "ข้อใดผิด เกี่ยวกับการผลิตไม้ประดับเมืองไทย",
+    "choices": [
+      "ไม้ใบประดับแม้ใบสวย แต่ไม่มีดอก จึงทำให้ปรับปรุงพันธุ์ใหม่ ๆ ได้ยาก",
+      "ไม้ใบเขตร้อน สามารถผลิตได้ในประเทศเขตหนาวเช่นกัน แต่ต้นทุนการปรับสภาพโรงเรือนปลูกเลี้ยงสูง จึงมีการนำเข้าจากประเทศเขตร้อน",
+      "ไทยเป็นประเทศเขตร้อน จึงผลิตไม้ประดับเมืองร้อนได้ดี แม้ไม่ต้องใช้เทคโนโลยีโรงเรือนราคาแพง",
+      "การผลิตไม้เมืองร้อนเพื่อส่งออก เป็นการใช้ต้นทุนสภาพภูมิอากาศที่มีอยู่แล้วให้เป็นประโยชน์"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "ข้อใดไม่ถูกต้องเกี่ยวกับ \"อุตสาหกรรมการผลิตไม้ดอกไม้ประดับ\"",
+    "choices": [
+      "ผลิตไม้ดอกไม้ประดับได้ครั้งละจำนวนมาก ๆ",
+      "ต้นไม้ที่ผลิตมีขนาดทรงพุ่ม และมีการออกดอกสม่ำเสมอกันแทบทุกต้น",
+      "สามารถกำหนดวันขายได้อย่างแม่นยำ โดยการบังคับการออกดอกด้วยเทคนิคทางวิทยาศาสตร์เกษตร",
+      "ต้องผลิตภายใต้โรงเรือนทันสมัย ใช้เทคโนโลยีขั้นสูงทุกขั้นตอน จึงจะทำให้ได้พืชคุณภาพสูงระดับอุตสาหกรรม"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "ข้อใดถูกต้องในการทำให้ดอกไม้มีสีสันใหม่ ๆ สวยงามแปลกตาต่างไปจากที่มีอยู่เดิม เพื่อให้ขายได้มากขึ้น",
+    "choices": [
+      "การย้อมสีดอกไม้ โดยการให้ดูดสีผ่านท่อลำเลียง และปรากฏสีแปลกตาบนกลีบดอก",
+      "การผสมเกสร โดยเลือกแม่พันธุ์ที่มีลักษณะทนร้อน และพ่อพันธุ์ที่บานทน และสีสันสดใส",
+      "การตัดต่อพันธุกรรมเพื่อให้สีที่สวยงาม ปรากฏในพันธุ์ที่มีฟอร์มสวย กลีบดอกหนา และบานได้ทน",
+      "ถูกทุกข้อ"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "ในการสร้างไม้ประดับรูปแบบใหม่ ๆ ในระยะสั้น ๆ โดยไม่รบกวนลักษณะทางพันธุกรรมเดิมของพืช",
+    "choices": [
+      "ใช้เทคนิคการเสียบยอดต่อกิ่ง ให้ได้ทรงพุ่มแปลกตา",
+      "ใช้ฝีมือถักสานลำต้น ให้ได้ราคา เพิ่มมูลค่า",
+      "ใช้การย้อมสีดอกไม้",
+      "ถูกทุกข้อ"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "ข้อใดคือแนวทางการผลิตไม้ตัดดอกในอนาคต นอกจากการเลือกใช้พลังงานสะอาด",
+    "choices": [
+      "ปลูกพันธุ์ตัดต่อพันธุกรรมที่ต้านทานโรคและแมลง เพื่อลดการใช้สารเคมีกำจัดโรคแมลง ลดมลพิษ",
+      "ใช้เทคโนโลยีโรงเรือน ติดตั้งเซนเซอร์เพื่อกำหนดปัจจัยการผลิต ตามที่พืชต้องการ",
+      "ระบบการผลิตมีการดักน้ำทิ้งจากการเกษตรไว้บำบัดให้สะอาดก่อนปล่อยออกสู่นอกโรงเรือน ลดการปนเปื้อนสิ่งแวดล้อมเช่น แหล่งน้ำ และดิน",
+      "ถูกทุกข้อ"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "ข้อใดไม่ใช่การใช้เทคโนโลยีในการควบคุมปัจจัยสภาพแวดล้อมให้เหมาะกับการเจริญเติบโตของพืช",
+    "choices": [
+      "การปรับปรุงพันธุ์ดาวเรืองฝรั่งเศสให้มีสาร Xanthophyll สูง",
+      "การเปิดปิดของม่านบนหลังคาอัตโนมัติในรอบวันเพื่อควบคุมแสงแดดที่ส่องผ่านให้เหมาะสมกับพืช",
+      "การให้ CO2 เพิ่มในการปลูกระบบปิด เพื่อเพิ่มอัตราการเจริญเติบโต ปลูกได้หลายรอบมากขึ้นต่อปี",
+      "การให้แสงไฟแก่พืช เพื่อให้จำนวนชั่วโมงที่ได้รับแสงเหมาะสมต่อการกระตุ้นให้สร้างตาดอก"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "อะไรคือแนวทางการผลิตไม้ดอกไม้ประดับที่มุ่งสู่ การปล่อยก๊าซเรือนกระจกให้เป็นศูนย์ (Net-zero GHG emissions)",
+    "choices": [
+      "การส่งเสริมการผลิตในประเทศ การใช้งานดอกไม้ในท้องถิ่น ตามฤดูกาล เพื่อลดการนำเข้า",
+      "การติดตั้งโซล่าร์เซลเพื่อผลิตไฟฟ้าสำหรับปั๊มน้ำ และห้องเย็นเก็บรักษาพันธุ์พืช",
+      "ถูกทั้งข้อ a และ b",
+      "ผิดทั้ง a และ b"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "ข้อใดเป็นเหตุผลสำคัญ ของโรงเรือนผลิตไม้ดอกไม้ประดับที่มีช่องเปิดด้านบนหลังคา",
+    "choices": [
+      "เพื่อเป็นทางออกฉุกเฉินของผู้ปฏิบัติงาน ตามกฏหมายสิ่งก่อสร้าง",
+      "เพื่อให้อากาศร้อนซึ่งเบา ลอยตัวขึ้นสูง และระบายความร้อนออกจากโรงเรือนได้",
+      "เพื่อให้ลมจากภายนอกหมุนเวียนพัดเข้ามา เพื่อสร้างสมดุลย์อากาศให้กับพืชที่ผลิต",
+      "ถูกทุกข้อที่กล่าวมา"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "อะไรคือเทคโนโลยีที่นำมาใช้เพื่อลดอุณหภูมิในโรงเรือนไม้ดอกไม้ประดับในเขตร้อน",
+    "choices": [
+      "ระบบพ่นหมอก เพื่อให้การระเหยของละอองไอน้ำนำความร้อนออกไปจากโรงเรือน",
+      "ระบบ evaporative cooling pad system ที่ใช้พัดลมดูดอากาศชื้นให้ลอยผ่านพืช และระเหยใช้ความร้อน เพื่อลดอุณหภูมิในโรงเรือนลง",
+      "การใช้วัสดุพรางแสงที่ช่วยสะท้อนแสงออกไป เพื่อลดอุณหภูมิลงได้",
+      "ถูกทุกข้อ"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "ปัจจัยอะไรบ้างที่ทำให้ดอกไม้ได้รับความนิยมซื้อหามาใช้งานในโอกาศต่าง ๆ",
+    "choices": [
+      "มีชื่อที่ดี ฟังแล้วเป็นมงคล",
+      "มีทั้งดอกเล็ก ดอกช่อ ดอกเดี่ยว และดอกขนาดใหญ่ ให้เลือกใช้งานได้หลากหลาย",
+      "มีอายุการปักแจกันที่ทน บานสวยได้หลายวัน",
+      "ถูกทุกข้อ"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "ข้อใดไม่ถูกต้อง (การปลูกไม้ดอก)",
+    "choices": [
+      "การปลูกกุหลาบในไทยให้ได้คุณภาพต้องมีการให้แสงไฟเพิ่มเพื่อสร้างคุณภาพดอก",
+      "ซ่อนกลิ่นมีหัวใต้ดิน ควรเลือกพื้นที่ที่เป็นดินร่วนปนทราย เพื่อหัวจะมีขนาดใหญ่ และขุดได้ง่าย",
+      "สามารถปลูกเบญจมาศเป็นการค้าได้ที่เชียงใหม่ สระบุรี และนครราชสีมา",
+      "ปทุมมา เป็นดอกไม้ที่ได้รับความนิยมเนื่องจากสวย มีหลายสี หลายขนาด และบานทน"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "ข้อใดถูกต้องเกี่ยวกับไม้ใบประดับ",
+    "choices": [
+      "เป็นพืชมีดอก แต่ดอกมักไม่เด่น ใช้ความสวยงามของใบทั้งรูปทรงสีสัน ในการประดับ",
+      "นอกจากความงาม ใบไม้ช่วยลดมลพิษ ลดฝุ่น และลดคาร์บอนไดออกไซด์เพื่อช่วยลดโลกรวนได้อีกด้วย",
+      "ไทยส่งออกไม้ประดับเมืองร้อน ลิ้นมังกร มอนสเตอรา แก้วกาญจนา และอีกหลายชนิดไปจำหน่ายยังต่างประเทศ",
+      "ถูกทุกข้อ"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "ข้อใดไม่ถูกต้องสำหรับการปลูก Amaryllis ในประเทศไทย",
+    "choices": [
+      "ในไทยเรียกว่าว่าน 4 ทิศ สามารถปลูกให้ออกดอกได้ดีในประเทศไทย",
+      "แต่พันธุ์ของเนเธอร์แลนด์เป็นเมืองหนาวหัวใหญ่ให้ดอกใหญ่ไม่สามารถปลูกได้ในเมืองไทย",
+      "ประเทศไทยปลูก Amaryllis หัวพันธุ์ขนาดใหญ่ เพื่อขุดหัวพันธุ์ส่งออกต่างประเทศที่ จ.กาญจนบุรี",
+      "ว่าน 4 ทิศมีหัวใต้ดิน การปลูกในดินร่วนปนทรายจะช่วยให้การขุดหัวพันธุ์ขาย ง่าย และมีคุณภาพสูง"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "ข้อใดไม่ถูกต้องในการให้ปุ๋ยแก่ไม้ดอกไม้ประดับกระถาง",
+    "choices": [
+      "ให้ปุ๋ยมากที่สุด เพื่อให้ต้นเจริญเติบโตเร็ว สวย ขายได้ราคาสูง ได้ผลตอบแทนเร็วที่สุด",
+      "ให้ปุ๋ยเฉพาะที่พืชต้องการ เท่าที่พืชสามารถนำไปใช้ได้ เพื่อไม่ให้ปุ๋ยเหลือทิ้งไปในสภาพแวดล้อม",
+      "ให้ปุ๋ยตรงกับระยะการเจริญเติบโตของพืช และฤดูกาล เพื่อลดต้นทุนค่าปุ๋ย",
+      "เลือกประเภทของปุ๋ยให้สัมพันธ์กับแรงงานหรือเทคโนโลยีการให้ปุ๋ย เพื่อลดต้นทุนในระยะยาว"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "การผลิตที่เป็นมิตรต่อสภาพแวดล้อมนั้นหมายถึงข้อใดบ้าง",
+    "choices": [
+      "การเลือกพันธุ์ที่ต้านทานต่อโรคและแมลงเพื่อลดการใช้สารเคมีในการป้องกันกำจัด",
+      "ให้ปุ๋ยเท่าที่พืชต้องการ เพื่อลดปุ๋ยเหลือทิ้งที่ถูกน้ำชะไปโดยเปล่าประโยชน์และปนเปื้อนสิ่งแวดล้อม",
+      "ถูกทั้งข้อ a และ b",
+      "ผิดทั้งข้อ a และ b"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "Subsurface irrigation system ในการผลิตไม้ดอกกระถางหมายถึงข้อใด",
+    "choices": [
+      "การให้น้ำจากก้นกระถางให้ซึมผ่านวัสดุปลูกขึ้นไป",
+      "การใช้วัสดุปลูกที่สับเป็นชิ้นเล็กๆ สะอาด และปราศจากดิน",
+      "การให้น้ำอัตโนมัติในโรงเรือน",
+      "การใช้แขนกลติดหัวฉีดน้ำ พ่นให้ทั่วโรงเรือน"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "ทำไมจึงต้องศึกษาเรื่องปริมาณการให้ปุ๋ยที่เหมาะสมสำหรับการปลูกไม้ประดับ",
+    "choices": [
+      "เพื่อลดต้นทุนค่าปุ๋ย ให้ปุ๋ยเท่าที่พืชต้องการ ต้นทุนต่ำจะเพิ่มความสามารถในการแข่งขันในการขาย",
+      "เพื่อไม่ให้ปุ๋ยเหลือจากการดูดไปใช้ของพืช ปนเปื้อนแหล่งน้ำ และดิน ทำลายสภาพแวดล้อม",
+      "ถูกต้องทั้ง a และ b เป็นเรื่องสำคัญที่ควรศึกษาในพืชปลูกทุกชนิด",
+      "ไม่ใช่ทั้ง a และ b มันเป็นการตอบสนองของพืชแต่ละชนิดไม่เหมือนกันเท่านั้น"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "ข้อใดถูกต้องเกี่ยวกับการผลิตไม้ดอกไม้ประดับที่เป็นมิตรต่อสังคม",
+    "choices": [
+      "ตั้งชื่อพันธุ์ หรือชื่อบริษัทให้มีชื่อของชุมชนท้องถิ่น ทำให้คนทั่วโลกรู้จักว่าดอกไม้มาจากที่นี่",
+      "จ้างแรงงานคนที่มีภูมิลำเนาในท้องถิ่น เพื่อดึงคนกลับบ้านเกิด เพื่อร่วมพัฒนาชุมชน",
+      "จัดต้นไม้ส่วนนึงให้ผู้สูงอายุในท้องถิ่นปลูกขาย เพื่อให้ไม่เหงา รู้สึกมีคุณค่า และมีรายได้",
+      "ถูกทุกข้อที่กล่าวมา"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "ข้อใดถูกต้องเกี่ยวกับ Automatic sorting machine ที่ใช้ในการผลิตไม้ดอกไม้ประดับ",
+    "choices": [
+      "ในพื้นที่ขาดคนที่มีความชำนาญในการคัดเลือกต้นไม้ หรือค่าจ้างแพงมาก อาจต้องลงทุนใช้เครื่องจักรในการช่วยคัดแยกให้ได้",
+      "เครื่องคัดแยกต้นไม้จะใช้การวิเคราะห์ภาพถ่าย และแยกต้นตามที่เราโปรแกรมไว้เช่น ต้องการสีดอกกี่%",
+      "ในพื้นที่ที่ค่าแรงราคาถูก และมีคนที่สามารถทำได้ ไม่จำเป็นต้องใช้เครื่องคัดแยก เพราะลงทุนสูงและต้องมีระบบลำเลียงด้วยสายพานรองรับ",
+      "ถูกทุกข้อ"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "หากมีแต่ที่นาดำเก่า ซึ่งเป็นพื้นที่ต่ำ น้ำท่วมขังฤดูฝน และดินเหนียวแน่นในฤดูแล้ง จะแนะนำให้ปลูกไม้ดอกไม้ประดับได้หรือไม่",
+    "choices": [
+      "ไม่ได้ เพราะจะเน่าง่ายไม่คุ้มค่ากับการลงทุน ควรเลือกพืชให้เหมาะสมกับพื้นที่",
+      "ได้ เพราะเลือกปลูกในกระถางบนชั้นวางที่สูงเหนือน้ำได้ หรือทำอาคารปลูกพืชได้ ไม่จำเป็นต้องปลูกลงในดินที่มีปัญหาโดยตรง",
+      "ถูกทั้งสองข้อ แล้วแต่เจ้าของที่",
+      "ผิดทั้งสองข้อ ถ้าไม่ไปหาความรู้เพิ่มเติมทำอะไรก็ไม่สำเร็จ"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "ข้อใดเป็นการใช้พืชช่วยปรับสภาพแวดล้อมมากที่สุด",
+    "choices": [
+      "ปลูกต้นไทรเกาหลีปิดบังรั้วที่ไม่สวยงาม",
+      "ซุ้มไม้เลื้อยปลูกต้นม่านบาหลีเพื่อบังแสงแดดด้านทิศตะวันตก",
+      "ปลูกต้นทองอุไรเพื่อสร้างจุดเด่นหน้าบ้าน",
+      "ปลูกต้นสนทะเลเพื่อแสดงแนวเขตที่ดินและตัดไม้ขายในอนาคต"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "การเลือกชนิดต้นไม้ให้เข้ากับสภาพแวดล้อมคำนึงถึงข้อใดมากที่สุด",
+    "choices": [
+      "ความต้องการเจ้าของบ้าน",
+      "เป็นต้นที่โตเร็ว และราคาไม่แพง",
+      "ต้นไม้สามารถอยู่รอดได้",
+      "เลือกให้ตรงกับสไตล์ของสวน"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "กิ่ง ก้าน ใบ ของต้นไม้ช่วยปรับสภาพแวดล้อมได้อย่างไร",
+    "choices": [
+      "ต้นไม้ที่แตกกิ่งก้านมากและทรงพุ่มแน่นช่วยให้ลมพัดผ่านได้ดี",
+      "เพิ่มการสะสมก๊าซคาร์บอนไดออกไซด์บริเวณผิวดิน เพื่อกระตุ้นการหายใจของจุลินทรีย์",
+      "ช่วยสร้างจุดเด่นให้กับสวนหย่อม",
+      "ช่วยให้ร่มเงา ลดความเร็วลม และดักฝุ่น"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "การสำรวจและวิเคราะห์พื้นที่ มีความสำคัญอย่างไร",
+    "choices": [
+      "ทราบทิศทางแดด เพื่อเลือกชนิดหญ้าสนาม",
+      "เข้าใจสภาพแวดล้อมบริเวณบ้าน และทราบปัญหาที่พบ",
+      "ทราบทิศทางลมเพื่อจัดวางต้นไม้",
+      "ทราบ pH ดิน เพื่อวางแผนปรับปรุงดิน"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "ฤดูกาลใดของประเทศไทย เกิดเงาทอดยาวทางทิศเหนือมากกว่าฤดูกาลอื่นๆ",
+    "choices": [
+      "ฤดูหนาว",
+      "ฤดูฝน",
+      "ฤดูร้อน",
+      "ฤดูใบไม้ผลิ"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "สระน้ำข้างบ้านทิศตะวันออกหรือทิศตะวันตก เกิดแสงสะท้อนเข้าสู่บ้านมากที่สุดเวลาใด",
+    "choices": [
+      "6.00-8.00 น.",
+      "8.00-10.00 น.",
+      "10.00-12.00 น.",
+      "6.00 และ 18.00 น."
+    ],
+    "answer": 3
+  },
+  {
+    "q": "หน้าบ้านหันทิศตะวันตก จะได้รับลมประจำถิ่นอย่างไร",
+    "choices": [
+      "ลมร้อน",
+      "ลมร้อน ลมฝน และลมหนาว",
+      "ลมมรสุมตะวันออกเฉียงเหนือ",
+      "ลมใต้"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "นิสิตต้องการเลือกซื้อบ้านจัดสรรในภาคกลาง ควรเลือกหน้าบ้านหันทิศใดให้ได้รับลมมากที่สุด",
+    "choices": [
+      "ทิศเหนือ",
+      "ทิศใต้",
+      "ทิศตะวันออก",
+      "ทิศตะวันออก หรือ ตะวันตก ก็ได้"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "สภาวะน่าสบายมีลักษณะอย่างไร",
+    "choices": [
+      "ร่มเงามาก ความชื้นสูง ทำให้รู้สึกเย็นสบาย",
+      "ความชื้นและอุณหภูมิต่ำ ๆ",
+      "มีลมพัดพาความร้อนระบายเหงื่อจากร่างกาย",
+      "บริเวณแดดรำไรใต้ต้นมะม่วง"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "อาคารด้านสกัดควรหันทิศใดเพื่อให้รับความร้อนน้อยที่สุด",
+    "choices": [
+      "ทิศเหนือ",
+      "ทิศใต้",
+      "ทิศตะวันออก",
+      "ทิศตะวันออก-ตก"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "steps / stairs hall ควรจัดวางทิศใด",
+    "choices": [
+      "ทิศเหนือ",
+      "ทิศใต้",
+      "ทิศตะวันออก",
+      "ทิศตะวันตก"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "หน้าบ้านและถนนเข้าบ้านควรหลีกเลี่ยงทิศใดมากที่สุด",
+    "choices": [
+      "ทิศเหนือ",
+      "ทิศใต้",
+      "ทิศตะวันออก",
+      "ทิศตะวันตก"
+    ],
+    "answer": 3
+  },
+  {
+    "q": "wind drop space ควรอยู่ทิศใดในบริเวณบ้าน",
+    "choices": [
+      "ทิศเหนือ",
+      "ทิศใต้",
+      "ทิศตะวันออก",
+      "ทิศตะวันตก"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "การใช้ต้นไม้เพื่อลดแสงสะท้อนเพื่อวัตถุประสงค์ด้านใด",
+    "choices": [
+      "engineering purposes",
+      "horticultural purposes",
+      "architectural purposes",
+      "aesthetic purposes"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "Garden room เป็นการใช้ต้นไม้เพื่อวัตถุประสงค์ใด",
+    "choices": [
+      "engineering purposes",
+      "horticultural purposes",
+      "architectural purposes",
+      "aesthetic purposes"
+    ],
+    "answer": 2
+  }
+];
+const ROSTER = [{"id": "6520101656", "name": "นายทศพล พ่วงเจียม", "faculty": "เกษตร กำแพงแสน", "major": "พืชไร่นา", "year": 5}, {"id": "6720100912", "name": "นายธนพร ภูมิสัย", "faculty": "เกษตร กำแพงแสน", "major": "ส่งเสริมและนิเทศศาสตร์เกษตร", "year": 3}, {"id": "6820100019", "name": "นายกฤษกร ดาวัน", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100027", "name": "นายกฤษกร ใสกระจ่าง", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100035", "name": "นายกฤษฏิ์ ผิวทองงาม", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100043", "name": "นายกวินภพ ตันโต", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100051", "name": "นางสาวกัลยานุช ชั่งเรือนกุล", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100060", "name": "นายจักรพันธ์ พลอยระย้า", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100086", "name": "นายชาติชาย ศรีทองทิม", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100094", "name": "นายชุติเทพ ดาษฎาจันทร์", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100116", "name": "นายณฐพล เทียนธนากร", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100141", "name": "นายณัฐภณ เซ่งจันทร์", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100159", "name": "นายดัสกร ทิพย์สุวรรณ์", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100175", "name": "นายธนะยชญ์ อมรชัยยาพิทักษ์", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100183", "name": "นางสาวธนัญชนก สุภาสาด", "faculty": "เกษตร กำแพงแสน", "major": "ธุรกิจเกษตร", "year": 2}, {"id": "6820100191", "name": "นายธรณ์เทพ ชลประเสริฐ", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100205", "name": "นางสาวธารารัตน์ บำรุงการ", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100221", "name": "นายนักรบ ใจกล้า", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100230", "name": "นายปภัสคุณ เวชรัตน์", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100248", "name": "นายปรเมษ ปุยทอง", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100281", "name": "นายพลกฤต ล้อสมทรัพย์", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100299", "name": "นายพลวัตร ยศอาลัย", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100302", "name": "นายพัชรพล บุตรดี", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100311", "name": "นายภัทรดนัย จันทราสา", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100329", "name": "นายภูวดล เงินทรัพย์", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100337", "name": "นายรัชพงศ์ ปานนิล", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100353", "name": "นายวงศธร คงทรัตน์", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100361", "name": "นางสาวศิริกานติ์ ชูสุวรรณอัมพร", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100370", "name": "นายศิริชัย จันทร์ทองม่วง", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100388", "name": "นายศิวกร เลื่อนสกุล", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100396", "name": "นายศุภวิชญ์ ไตรภูริวัฒน์", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100400", "name": "นายศุภวิชญ์ ธเนศนิตย์", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100418", "name": "นายสรยุทธ เทียนกระจ่าง", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100426", "name": "นางสาวสโรชินี ศรีสุนทร", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100434", "name": "นายสุกฤษฎิ์ ณ รังษี", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100442", "name": "นายสุวพัชร ธเนศนิตย์", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100451", "name": "นายอนุชิต ชูศิลป์กิจเจริญ", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100485", "name": "นายอาทิตย์ เเสงพ่วง", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820100892", "name": "นางสาวต้นข้าว ธรรมวสุกุล", "faculty": "เกษตร กำแพงแสน", "major": "พืชสวน", "year": 2}, {"id": "6820105495", "name": "นางสาวอาทิมา สุขศรีเพ็ง", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6820105509", "name": "นายอิทธิพล จิตติชัย", "faculty": "เกษตร กำแพงแสน", "major": "เครื่องจักรกลและเมคคาทรอนิกส์เกษตร", "year": 2}, {"id": "6920101190", "name": "นางสาวกนกพิชญ์ มีสุข", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101220", "name": "นางสาวกมลวรรณ มันกระโทก", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101301", "name": "นางสาวกัญญ์วรา ช่วยคงมา", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101351", "name": "นางสาวกัญติยา โตแทน", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101386", "name": "นางสาวกัลยกร สาเลิศ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101394", "name": "นางสาวกาญจนา ทองศรี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101432", "name": "นางสาวเขมสิริญฐ์ แสนศรี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101556", "name": "นายชยพัทธ์ องค์ไทร", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101599", "name": "นายชินภัทร ศรีเกตุนิ่ม", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101688", "name": "นายฐิติโชติ ธรรมลังกา", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101696", "name": "นางสาวณกมล จงเพิ่มวัฒนะผล", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101700", "name": "นางสาวณภัทร โพธิ์เรือนดี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101823", "name": "นางสาวณัฐนรี แสงรอด", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101831", "name": "นายณัฐนันท์ จันทร์เผือก", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101866", "name": "นายณัฐวัฒน์ แจ้งอิ่ม", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101921", "name": "นายดิษกรณ์ ครูสอน", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101939", "name": "นายถนพร จันทร์ทอง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101963", "name": "นายธนกร มาราช", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920101980", "name": "นายธนชิต พินิจการ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102021", "name": "นางสาวธนพร ทองแท่งใหญ่", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102056", "name": "นางสาวธนภรณ์ แสงเมือง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102064", "name": "นายธนภัทร์ คงแป้น", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102072", "name": "นางสาวธนัญชนก สังข์ทอง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102081", "name": "นางสาวธนียา ใจตรง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102111", "name": "นางสาวธิดารัตน์ อินเนียน", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102145", "name": "นายธีรเดช เงินเส็ง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102153", "name": "นายธีรภัทธ์ ช้างใหญ่", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102161", "name": "นายธีรภัทร ขันสู้การ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102188", "name": "นางสาวนนทิชา มั่นคง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102226", "name": "นางสาวนภัสวรรณ ทองมาก", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102242", "name": "นางสาวนภัสสร เจียมอนุกูลกิจ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102251", "name": "นางสาวนรมน อ่อนพับ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102323", "name": "นายนิธินันท์ หอมสุวรรณ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102331", "name": "นางสาวนิษารัตน์ จีนตุ้ม", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102391", "name": "นางสาวบุญสิตา ยะน้ำอ่าง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102412", "name": "นายปกรณ์ เอกจีน", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102439", "name": "นางสาวปภาวรินท์ แดงดอนไพร", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102455", "name": "นายปภินวิช รัตน์ประสิทธิ์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102463", "name": "นางสาวปราณปรียา สมรส", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102692", "name": "นางสาวพัทธวรรณ วงษ์ปาน", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102731", "name": "นางสาวพิชชาพร กลับดี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102781", "name": "นางสาวพิรดา ทองหีต", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102803", "name": "นายพีรพัฒน์ ไฝ่เมตตา", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102811", "name": "นายพีรวิชญ์ ราตรีหอม", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102862", "name": "นางสาวฟ้าใส เเผนกุล", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102901", "name": "นายภัทรพล สุขสมัย", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102927", "name": "นายภาคิน พรหมสุวรรณ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920102943", "name": "นายภาณุพงศ์ ดอกพรม", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103001", "name": "นายเมธัส คงเหล่า", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103052", "name": "นายรฐปภณ เจริญกลิ่น", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103109", "name": "นายรัตนชัย เชื้อเพชร", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103249", "name": "นางสาววรฤทัย นางแย้ม", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103338", "name": "นางสาววีรณัฐานันท์ บุญทรง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103371", "name": "นายศักดิ์ดา กระต่ายทอง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103460", "name": "นายสรวิชฌ์ พะวงค์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103478", "name": "นายสันติ ปลอดยอดยิ่ง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103532", "name": "นางสาวสุชัญญา อุปภาค", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103583", "name": "นางสาวสุดารัตน์ ทิพย์เสภา", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103605", "name": "นายสุธีกานต์ แซ่จัน", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103648", "name": "นางสาวสุภาภรณ์ เก้าเอี้ยน", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103664", "name": "นายสุวสันต์ สรวยล้ำ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103681", "name": "นายหฤทธธร สันเจนดง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103745", "name": "นางสาวอริษา นิ่มอยู่", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103796", "name": "นางสาวอุมาพร คนผิวเลิศ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920103818", "name": "นางสาวอุษามณี มูลทองคำ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104601", "name": "นายกมลวิช กาญจนะ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104628", "name": "นายกันตพัฒน์ สานพภา", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104636", "name": "นายกันตวัฒน์ พงษ์ศรานนท์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104644", "name": "นายกิตติคุณ ลุนอุบล", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104652", "name": "นางสาวกุลธิฌาษาณ์ ปานเพ็ชร์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104661", "name": "นายเกียรติศักดิ์ น้อมเจริญ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104679", "name": "นายจักรพงษ์ รัตนวิชัย", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104687", "name": "นางสาวชญาดา เกาทัณฑ์ทอง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104695", "name": "นางสาวชนัญชิดา วงษ์พรหม", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104709", "name": "นางสาวชนัญญา ศรีสมุทร", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104717", "name": "นางสาวชาลินี กลิ่นอุทัย", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104725", "name": "นางสาวฐิติวรดา ภูอุทา", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104733", "name": "นางสาวณัฏฐ์ชญา นิ่มพานิชย์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104741", "name": "นายณัฐชนน ใยเกตุ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104750", "name": "นางสาวณัฐชยา ทองเมือง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104768", "name": "นายณัฐนันท์ จันทร์สุขศรี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104776", "name": "นายณัฐเศรษฐ แก้วคอน", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104784", "name": "นางสาวดวงกมล เตชาพินิจ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104792", "name": "นายเดชศดิศ แสงจันทร์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104814", "name": "นายธนกร รอดจร", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104831", "name": "นายธนวัฒน์ แก้ววิมล", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104849", "name": "นายธันวา เย็นสำราญ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104857", "name": "นายธีรพล สุนากรณ์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104865", "name": "นายธีรภัทร ภักดี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104873", "name": "นายนครินทร์ นิลเขียว", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104881", "name": "นางสาวนริศรา เตชะทัต", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104890", "name": "นายนิพัทธ์ พัฒนะพงษ์วิบูลย์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104920", "name": "นางสาวปุณณภา หุ่นสุวรรณ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104946", "name": "นางสาวเปรมฤดี เชื้อดี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104954", "name": "นางสาวพรกนก มณีสม", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104962", "name": "นายพรเทพ ทรัพย์กาญจนา", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920104997", "name": "นางสาวพัทธ์ธีรา ยินดี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105004", "name": "นางสาวพิมมาดา ช่างทุ่งใหญ่", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105012", "name": "นางสาวพิรญาณ์ ปานมีศรี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105021", "name": "นางสาวพุทธรัตน์ คงชุ่ม", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105039", "name": "นางสาวเพียงออ พวงนาค", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105047", "name": "นายภคิณชธร สีดา", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105055", "name": "นายเมธัส แจ่มจำรัส", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105063", "name": "นายยศพร ศุภโคตร", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105071", "name": "นางสาวรรินดา แพงคำวงษ์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105080", "name": "นายรัชชานนท์ เกษเพชร", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105098", "name": "นางสาวลลิตภัทร เทียมจันทร์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105101", "name": "นางสาวลลิตภัทร์ มายืนยง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105110", "name": "นายวรธน จอมสูงเนิน", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105128", "name": "นางสาววรรณรดา งามสกุลแก้ว", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105144", "name": "นางสาววีนา บุตรพุ่ม", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105152", "name": "นายวีรภัทร มณฑา", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105161", "name": "นายวุฒิชัย จันทร์โสม", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105179", "name": "นางสาวศวิตา สิทธิชัย", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105195", "name": "นางสาวสตรีรัตน์ สันเที๊ยะ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105209", "name": "นายสรวิศ วนาสุข", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105217", "name": "นางสาวสโรชินี ทองขาว", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105225", "name": "นายสิรภัทร ภายอุ้ม", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105233", "name": "นางสาวสิรยากร คุ้มกัน", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105241", "name": "นางสาวสุดารัตน์ แสนสุข", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105250", "name": "นายสุทธิพงษ์ บุญเลิศฟ้า", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105268", "name": "นางสาวสุภัชชา เซี่ยงโห้", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105276", "name": "นายอดิศรณ์ ปิติมาตร์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105292", "name": "นายอภิภู นามศิริพงศ์พันธุ์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105306", "name": "นางสาวอภิสรา สังข์ทอง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105314", "name": "นางสาวอริสรา เขาจารี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105322", "name": "นางสาวอารยา สารวิถี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105331", "name": "นางสาวอินทิรา มารศรี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105403", "name": "นางสาวกรรณิการ์ สุขสัมพันธ์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105411", "name": "นายกฤษฎี เเทนนาค", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105438", "name": "นางสาวเขมมิกา กิจหว่าง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105446", "name": "นายจตุพร วงษ์สวัสดิ์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105454", "name": "นายจิรวัฒน์ ธรรมลังกา", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105462", "name": "นายจิรวัฒน์ เรือนทอง", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105471", "name": "นายชนาธิป หนองบัวดี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105489", "name": "นายชิษนุพงศ์ แซ่ตัน", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105497", "name": "นางสาวณัฏฐ์ญา เกาะแก้ว", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105519", "name": "นางสาวณิชกานต์ พันธ์สุข", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105527", "name": "นายธงชัย สุขเกษม", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105535", "name": "นายธนธรณ์ เหมษี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105543", "name": "นายธนภัทร สิมมา", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105551", "name": "นายธนวิชญ์ วัฒนสาร", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105578", "name": "นายนภสินธุ์ ดวงจำปา", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105594", "name": "นางสาวปทิตตา ศิริพงษ์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105608", "name": "นางสาวปทิตตา อินทรสร", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105616", "name": "นายปัณณวัฒน์ ฤกษ์เนาวรัตน์", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105624", "name": "นายพงศกร นิ่มทัศนศิริ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105632", "name": "นางสาวพรสุดา สระทองทา", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105659", "name": "นางสาวพิชญานิน คำมุล", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105667", "name": "นางสาวพิลาพรรณ ลอยแก้ว", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105675", "name": "นายรพีภัทร ชาวประทุม", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105683", "name": "นางสาวรรินรสา วงศ์แสนสี", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105691", "name": "นายรัฐภูมิ ชีววิญญู", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105705", "name": "นางสาวศิรภัสสร พรหมชัย", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105713", "name": "นายศิวพงษ์ พงศ์ประยูร", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105721", "name": "นายสิริกร นิธิชินโชติ", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105730", "name": "นางสาวเสาวลักษณ์ จานแก้ว", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}, {"id": "6920105748", "name": "นายเอกพงษ์ แก้วบุบผา", "faculty": "เกษตร กำแพงแสน", "major": "ยังไม่สังกัดภาควิชา", "year": 1}];
+
+const rosterById = {};
+ROSTER.forEach(r => { rosterById[r.id] = r; });
+
+let searchMode = "id";
+let activeIdx = -1;
+
+const state = { sid:"", name:"", year:"", faculty:"", major:"", inRoster:false, answers:{}, flags:0, startTime:null, submitted:false, examActive:false };
+const $ = id => document.getElementById(id);
+function show(s){ document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active")); $(s).classList.add("active"); }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+function yearLabel(y){ return y ? ("ปี " + y) : "—"; }
+function normalize(s){ return String(s).toLowerCase().replace(/\s+/g,""); }
+
+/* ================= Backend (Supabase) ================= */
+const SUPABASE_URL = "https://mxuytburrxeegqjzbfnb.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14dXl0YnVycnhlZWdxanpiZm5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MDgzMzEsImV4cCI6MjEwNTE4NDMzMX0.R5cQytG-vNo48YVBZaYZvGMsRK6Kzod0XEg1GB5npr8";
+const SB_TABLE = "exam_results";
+const SB_ENDPOINT = SUPABASE_URL + "/rest/v1/" + SB_TABLE;
+
+// หน้าเว็บ online เสมอเมื่อมี network — ไม่ต้องเช็คก่อน
+// เช็คว่ารหัสนี้เคยส่งแล้วหรือยัง: อาศัย unique(sid) ที่ฐานข้อมูล
+// (insert ซ้ำจะได้ error 409) จึงไม่ต้อง query ก่อน — กันหลุด/แข่งกันเขียน
+
+// บันทึกผลลง Supabase; คืนสถานะ: "ok" | "duplicate" | "fail"
+async function saveResult(rec){
+  try{
+    const res = await fetch(SB_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SB_KEY,
+        "Authorization": "Bearer " + SB_KEY,
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify({
+        sid: rec.sid, name: rec.name, year: rec.year,
+        faculty: rec.faculty, major: rec.major,
+        in_roster: rec.inRoster, answered: rec.answered,
+        score: rec.score, total: rec.total, flags: rec.flags,
+        seconds: rec.seconds, answers: rec.answers
+      })
+    });
+    if(res.ok) return "ok";
+    if(res.status === 409) return "duplicate";  // unique(sid) ชน = ส่งซ้ำ
+    return "fail";
+  }catch(e){ return "fail"; }
+}
+
+/* ---------- ค้นหา ---------- */
+function setMode(m){
+  searchMode = m;
+  $("tgId").classList.toggle("on", m==="id");
+  $("tgName").classList.toggle("on", m==="name");
+  $("searchInput").placeholder = m==="id" ? "พิมพ์รหัสนิสิต..." : "พิมพ์ชื่อหรือนามสกุล...";
+  $("searchInput").value = "";
+  hideResults();
+  $("searchInput").focus();
+}
+function doSearch(){
+  const raw = $("searchInput").value.trim();
+  activeIdx = -1;
+  if(!raw){ hideResults(); return; }
+  const key = normalize(raw);
+  let matches;
+  if(searchMode==="id"){
+    matches = ROSTER.filter(r => r.id.includes(raw.replace(/\s+/g,"")));
+  } else {
+    matches = ROSTER.filter(r => normalize(r.name).includes(key));
+  }
+  renderResults(matches.slice(0,30));
+}
+function renderResults(matches){
+  const box = $("results");
+  if(matches.length===0){
+    box.innerHTML = '<div class="empty">ไม่พบในรายชื่อ — กรอกข้อมูลเองด้านล่างได้</div>';
+    box.classList.add("show"); return;
+  }
+  box.innerHTML = matches.map((r,i)=>
+    '<div class="item" data-id="'+r.id+'" data-i="'+i+'" onclick="fillFrom(\''+r.id+'\')">'+
+      '<div>'+escapeHtml(r.name)+'</div>'+
+      '<div class="rid">'+r.id+' · '+yearLabel(r.year)+' · '+escapeHtml(r.major)+'</div>'+
+    '</div>'
+  ).join("");
+  box.classList.add("show");
+}
+function hideResults(){ $("results").classList.remove("show"); $("results").innerHTML=""; }
+
+function fillFrom(id){
+  const r = rosterById[id];
+  if(!r) return;
+  $("fSid").value = r.id;
+  $("fName").value = r.name;
+  $("fYear").value = String(r.year||"");
+  $("fFaculty").value = r.faculty||"";
+  $("fMajor").value = r.major||"";
+  $("searchInput").value = "";
+  hideResults();
+  $("filledTag").classList.add("show");
+  $("startErr").textContent = "";
+}
+
+/* ---------- ไปหน้ายืนยัน ---------- */
+function collectForm(){
+  return {
+    sid: $("fSid").value.trim(),
+    name: $("fName").value.trim(),
+    year: $("fYear").value,
+    faculty: $("fFaculty").value.trim(),
+    major: $("fMajor").value.trim()
+  };
+}
+function goReady(){
+  const d = collectForm();
+  if(!d.sid){ $("startErr").textContent="กรุณากรอกรหัสนิสิต"; return; }
+  if(!d.name){ $("startErr").textContent="กรุณากรอกชื่อ-นามสกุล"; return; }
+  $("startErr").textContent="";
+  // ธงเงียบ: ตรงกับรายชื่อหรือไม่
+  const r = rosterById[d.sid];
+  state.inRoster = !!(r && normalize(r.name)===normalize(d.name));
+  state.sid=d.sid; state.name=d.name; state.year=d.year;
+  state.faculty=d.faculty; state.major=d.major;
+  $("cSid").textContent = d.sid;
+  $("cName").textContent = d.name;
+  $("cYear").textContent = yearLabel(d.year);
+  $("cFaculty").textContent = d.faculty||"—";
+  $("cMajor").textContent = d.major||"—";
+  show("screenReady");
+  window.scrollTo(0,0);
+}
+function backToSearch(){ show("screenStart"); window.scrollTo(0,0); }
+
+/* ---------- fullscreen ---------- */
+function enterFullscreen(){
+  const el = document.documentElement;
+  const fn = el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
+  if(fn){ try{ fn.call(el); }catch(e){} }
+}
+function isFullscreen(){ return !!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement); }
+
+/* ---------- เริ่มสอบ ---------- */
+function beginExam(){
+  // กันเข้าซ้ำในเครื่องเดียวกัน (เช็คเร็ว ๆ) — กันซ้ำข้ามเครื่องจริงทำตอน submit ที่ฐานข้อมูล
+  if(getUsed().includes(state.sid)){
+    alert("รหัสนิสิตนี้ได้ส่งข้อสอบจากเครื่องนี้ไปแล้ว");
+    backToSearch();
+    return;
+  }
+  state.startTime=Date.now(); state.examActive=true;
+  enterFullscreen();
+  buildExam();
+  $("whoName").textContent = state.name + " (" + state.sid + ")";
+  show("screenExam");
+  window.scrollTo(0,0);
+}
+function buildExam(){
+  const box = $("questions"); box.innerHTML="";
+  const keys=["ก","ข","ค","ง"];
+  QUESTIONS.forEach((item,qi)=>{
+    const q=document.createElement("div"); q.className="q"; q.id="q"+qi;
+    let ch="";
+    item.choices.forEach((c,ci)=>{
+      ch+='<div class="choice" data-q="'+qi+'" data-c="'+ci+'" onclick="pick('+qi+','+ci+')">'+
+          '<div class="key">'+keys[ci]+'</div><div class="val">'+escapeHtml(c)+'</div></div>';
+    });
+    q.innerHTML='<div class="qnum">ข้อ '+(qi+1)+'</div><div class="qtext">'+escapeHtml(item.q)+'</div>'+ch;
+    box.appendChild(q);
+  });
+  $("total").textContent=QUESTIONS.length;
+  updateProgress();
+}
+function pick(qi,ci){
+  state.answers[qi]=ci;
+  document.querySelectorAll('.choice[data-q="'+qi+'"]').forEach(el=>{
+    el.classList.toggle("sel", Number(el.dataset.c)===ci);
+  });
+  updateProgress();
+}
+function updateProgress(){
+  const n=Object.keys(state.answers).length;
+  $("answered").textContent=n;
+  $("barFill").style.width=(n/QUESTIONS.length*100)+"%";
+}
+
+/* ---------- ตรวจจับออกจากจอ ---------- */
+function raiseFlag(){
+  if(!state.examActive||state.submitted) return;
+  state.flags++;
+  $("overlayCount").textContent="บันทึกครั้งที่ "+state.flags;
+  $("overlay").classList.add("show");
+  updateFlagChip();
+}
+function updateFlagChip(){
+  const c=$("flagChip"); c.textContent="ออกจากจอ "+state.flags+" ครั้ง";
+  c.classList.toggle("hot", state.flags>0);
+}
+function resumeExam(){
+  $("overlay").classList.remove("show");
+  if(state.examActive&&!state.submitted) enterFullscreen();
+}
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden") raiseFlag(); });
+window.addEventListener("blur",()=>{ setTimeout(()=>{ if(document.hidden) return; raiseFlag(); },50); });
+document.addEventListener("fullscreenchange",onFsChange);
+document.addEventListener("webkitfullscreenchange",onFsChange);
+function onFsChange(){ if(state.examActive&&!state.submitted&&!isFullscreen()) raiseFlag(); }
+
+/* ---------- ส่งคำตอบ ---------- */
+function submitExam(){
+  const n=Object.keys(state.answers).length;
+  if(n<QUESTIONS.length){
+    if(!confirm("ยังเหลืออีก "+(QUESTIONS.length-n)+" ข้อที่ยังไม่ได้ตอบ ต้องการส่งคำตอบเลยหรือไม่?")) return;
+  } else {
+    if(!confirm("ยืนยันการส่งคำตอบ? เมื่อส่งแล้วจะแก้ไม่ได้")) return;
+  }
+  state.submitted=true; state.examActive=false;
+  const secs=Math.round((Date.now()-state.startTime)/1000);
+  const mm=Math.floor(secs/60), ss=secs%60;
+
+  // คิดคะแนน (เมื่อข้อสอบมีเฉลย)
+  const hasKey = QUESTIONS.every(q => q.answer !== null && q.answer !== undefined);
+  let correct=null;
+  if(hasKey){
+    correct=0;
+    QUESTIONS.forEach((q,qi)=>{ if(state.answers[qi]===q.answer) correct++; });
+    const pct=Math.round(correct/QUESTIONS.length*100);
+    state.score=correct;
+    $("scoreNum").textContent=correct;
+    $("scoreTotal").textContent=QUESTIONS.length;
+    $("scorePct").textContent=pct+"%";
+    $("scoreWrap").style.display="block";
+    $("rScore").textContent=correct+" / "+QUESTIONS.length+" คะแนน ("+pct+"%)";
+    $("rScoreRow").style.display="flex";
+  }
+
+  $("rSid").textContent=state.sid;
+  $("rName").textContent=state.name;
+  $("rYearFac").textContent=yearLabel(state.year)+(state.faculty?(" · "+state.faculty):"");
+  $("rAns").textContent=n+" / "+QUESTIONS.length+" ข้อ";
+  $("rFlags").textContent=state.flags+" ครั้ง";
+  $("rTime").textContent=mm+" นาที "+ss+" วินาที";
+  if(state.flags>0) $("honestyNote").style.display="block";
+  if(document.exitFullscreen&&isFullscreen()){ try{ document.exitFullscreen(); }catch(e){} }
+  show("screenResult");
+  window.scrollTo(0,0);
+
+  // บันทึกผลลงส่วนกลาง
+  const rec = {
+    sid: state.sid, name: state.name, year: state.year,
+    faculty: state.faculty, major: state.major,
+    inRoster: state.inRoster,
+    answered: n, score: correct,
+    total: QUESTIONS.length, flags: state.flags,
+    seconds: secs, submittedAt: new Date().toISOString(),
+    answers: state.answers
+  };
+  const saveMsg = $("saveStatus");
+  saveMsg.textContent = "กำลังบันทึกผลเข้าระบบ...";
+  saveMsg.className = "";
+  saveMsg.style.display="block";
+  saveResult(rec).then(status=>{
+    if(status==="ok"){
+      markUsed(state.sid);
+      saveMsg.textContent = "\u2713 บันทึกผลเข้าระบบเรียบร้อยแล้ว";
+      saveMsg.className = "save-ok";
+    } else if(status==="duplicate"){
+      markUsed(state.sid);
+      saveMsg.textContent = "\u26A0 รหัสนิสิตนี้เคยส่งข้อสอบไปแล้ว ระบบเก็บเฉพาะครั้งแรก (ผลครั้งนี้ไม่ถูกบันทึก)";
+      saveMsg.className = "save-fail";
+    } else {
+      saveMsg.textContent = "\u26A0 บันทึกไม่สำเร็จ (เครือข่ายมีปัญหา) กรุณาแจ้งอาจารย์และแสดงหน้าจอนี้";
+      saveMsg.className = "save-fail";
+    }
+  });
+}
+window.addEventListener("beforeunload",(e)=>{
+  if(state.examActive&&!state.submitted){ e.preventDefault(); e.returnValue=""; }
+});
+
+/* ---------- ผูก event ---------- */
+$("searchInput").addEventListener("input", doSearch);
+$("searchInput").addEventListener("keydown",(e)=>{
+  const items = Array.from($("results").querySelectorAll(".item"));
+  if(e.key==="ArrowDown"){ e.preventDefault(); activeIdx=Math.min(activeIdx+1, items.length-1); }
+  else if(e.key==="ArrowUp"){ e.preventDefault(); activeIdx=Math.max(activeIdx-1, 0); }
+  else if(e.key==="Enter"){ if(activeIdx>=0 && items[activeIdx]) fillFrom(items[activeIdx].dataset.id); return; }
+  else { return; }
+  items.forEach((it,i)=> it.classList.toggle("active", i===activeIdx));
+  if(items[activeIdx]) items[activeIdx].scrollIntoView({block:"nearest"});
+});
+document.addEventListener("click",(e)=>{ if(!e.target.closest(".search-box")) hideResults(); });
+
+</script>
+</body>
+</html>
